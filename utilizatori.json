@@ -1,0 +1,8 @@
+[
+    {"utilizator": "admin", "parola": "admin", "email": "van_basten@bekembauer.com"},
+    {"utilizator": "stefan", "parola": "123", "email": "stefan@gmail.ro"},
+    {"utilizator": "ana", "parola": "aremere", "email": "ana@arepere.ro"},
+    {"utilizator": "bruce", "parola": "lee", "email": "chuck@noris.com"},
+    {"utilizator": "messi", "parola":"ronaldo", "email":"messi@ronaldo.ru"}
+]
+   
