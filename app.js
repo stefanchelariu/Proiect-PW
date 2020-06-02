@@ -3,6 +3,7 @@ const expressLayouts = require('express-ejs-layouts');
 const bodyParser = require('body-parser')
 const LoginRegisterScreen = require('./LoginRegisterScreen.js');
 const port = 5555;
+const Room = require('./room');
 const session = require('express-session');
 const app = express();
 const io = require('socket.io')(3000);
@@ -28,6 +29,8 @@ app.use(session ({
 
 
 _loginRegister = new LoginRegisterScreen(app);
+let rooms = [];
+
 
 let nr_clienti = 0;
 app.get('/register', _loginRegister.raspunsGetRegister);
@@ -52,13 +55,41 @@ app.get('/readyPartener', (req, res) =>{
     console.log("Tratez cerere pentru readyPartner!!");
     if(nr_clienti %2 ==0)
     {
-        res.send({ready:1, text:"Am Gasit inca un looser"});
+
+        res.send({ready:1});
+
     }
     else{
         res.send({ready:0});
     }
 
 });
+
+var chatRoomRequestCount = 0;
+app.get('/chatroom', (req, res) =>{
+    let user_id1 = nr_clienti - 1;
+    let user_id2 = nr_clienti;
+    chatRoomRequestCount ++;
+    if(chatRoomRequestCount == 2) // dupa ce ambii useri fac request la chat room
+    {
+        let newRoom = new Room(rooms.length, user_id1, user_id2);
+        rooms.push(newRoom);
+        console.log("Am creat Camera:" + rooms.length + " cu userii:" + user_id1 + " si " + user_id2);
+        chatRoomRequestCount = 0;
+    }
+    
+
+    res.render('chatroom');
+});
+
+app.post('/message', (req, res) => {
+    let client_id = req.body.id;
+    let message = req.body.message;
+    rooms[(client_id-1)/2].appendToChat(message);
+    console.log("Am primit mesajul:" + message);
+    
+});
+
 
 
 app.listen(port, () => console.log(`Serverul rulează la adresa http://localhost:` + port));

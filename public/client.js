@@ -1,16 +1,35 @@
-var message_id = 0;
 var client_id = 0;
 function postMessage() {
+    let xmlhttp;
     let message = document.getElementById("message-content").value;
-    message_id++;
-    acum = new Date();
-    acum = acum.getDate() + "-" + acum.getMonth() + ":" + acum.getHours() + ":" + acum.getMinutes() + ":" + acum.getSeconds() + "   ";
-    document.getElementById("chat-content").innerHTML += acum + message + "<br/> ";
     document.getElementById("message-content").value = "";
+    if (window.XMLHttpRequest) {
+        xmlhttp = new XMLHttpRequest();
+    }
+   
+    xmlhttp.open("POST", "message", true);
+    xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xmlhttp.send("id=" + client_id + "&message=" + message);
+    // acum = new Date();
+    // acum = acum.getDate() + "-" + acum.getMonth() + ":" + acum.getHours() + ":" + acum.getMinutes() + ":" + acum.getSeconds() + "   ";
+    //document.getElementById("chat-content").innerHTML += message + "<br/> ";
+
 }
 
 function getMessages(newMessages) {
-
+    let xmlhttp;
+    if (window.XMLHttpRequest) {
+        xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange =
+            function () {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    let messages = xmlhttp.responseText;
+                    document.getElementById("chat-content").innerHTML = messages;
+                }
+            }
+    }
+    xmlhttp.open("GET", "messages", true);
+    xmlhttp.send();
 }
 
 function lookForParteners() {
@@ -18,12 +37,13 @@ function lookForParteners() {
     if (window.XMLHttpRequest) {
         xmlhttp = new XMLHttpRequest();
         xmlhttp.onreadystatechange =
-        //fac rost client_id
+            //fac rost client_id
             function () {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                     client_id = JSON.parse(xmlhttp.responseText);
                     client_id = client_id.id;
                     document.getElementById("waiting").innerHTML = "Please wait while we finde a person to chat";
+                    document.getElementById("lookForPartenersButton").hidden = true;
                     askForReadyParteners();
                     return;
                 }
@@ -33,28 +53,37 @@ function lookForParteners() {
     xmlhttp.send();
 }
 
-function askForReadyParteners()
-{
+function askForReadyParteners() {
     let xmlhttp;
     if (window.XMLHttpRequest) {
         xmlhttp = new XMLHttpRequest();
         xmlhttp.onreadystatechange =
-        //intreb daca a mai gasit un user!
+            //intreb daca a mai gasit un user!
             function () {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                    let gata = JSON.parse(xmlhttp.responseText).ready;
-                    if(gata == 0)
-                    {
-                        setTimeout( askForReadyParteners, 1000);
+                    let raspuns = JSON.parse(xmlhttp.responseText);
+                    let gata = raspuns.ready;
+                    if (gata == 0) {
+                        setTimeout(askForReadyParteners, 1000);
                     }
-                    else{
+                    else {
                         document.getElementById("waiting").innerHTML += "<br/>Am gasit un looser!!!";
-                        return;
+                        askForChatRoom();
                     }
                 }
             }
     }
     xmlhttp.open("GET", "readyPartener", true);
-    xmlhttp.send(client_id);
-    
+    xmlhttp.send();
+}
+
+function askForChatRoom() {
+    let xmlhttp;
+
+    xmlhttp = new XMLHttpRequest();
+
+    console.log("Fac cerere la chatroom!");
+    xmlhttp.open("GET", "chatroom", false);
+    xmlhttp.send({id: client_id});
+    document.getElementById("body").innerHTML = xmlhttp.responseText;
 }
