@@ -10,14 +10,18 @@ function updateUsers(next) {
 
 }
 
-
+var session = "";
 
 class LoginRegisterScreen {
     constructor(app) {
         this._app = app;
-        this._session = "";
+        
     }
 
+    getSession(){
+        return session;
+    }
+    
     raspunsPostLogin(req, res) {
 
         updateUsers(() => {
@@ -28,11 +32,14 @@ class LoginRegisterScreen {
                 }
             }
             if (logat == 0) {
-                res.send("Eroare de logare!");
+                res.send("Login Error!");
+                session="";
             
             }
             else {
-                res.render('chatroom');
+                session = req.session;
+                session.username = req.body.username;
+                res.render('accountpage', {utilizator: session.username});
             }
         });
         
@@ -51,8 +58,9 @@ class LoginRegisterScreen {
                 email: req.body.email
             }
             utilizatori.push(utilizatorNou);
-            //fs.writeFile("utilizatori.json", JSON.stringify(utilizatori));
-            res.redirect('/');
+            session = req.session;
+            session.username = req.body.username;
+            res.render('accountpage', {utilizator: session.username});
         });
         
 
