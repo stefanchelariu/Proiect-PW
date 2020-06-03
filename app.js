@@ -3,7 +3,7 @@ const expressLayouts = require('express-ejs-layouts');
 const bodyParser = require('body-parser')
 const LoginRegisterScreen = require('./LoginRegisterScreen.js');
 const port = 5555;
-const Room = require('./room');
+//const Room = require('./room');
 const session = require('express-session');
 const app = express();
 const io = require('socket.io')(3000);
@@ -65,6 +65,18 @@ app.get('/readyPartener', (req, res) =>{
 
 });
 
+function getRoomByUserID(userID)
+{
+    for(let i = 0; i < rooms.length; ++i)
+    {
+        if(rooms[i].user1 == userID || rooms[i].user2 == userID)
+        {
+            return i;
+        }   
+    }
+    return -1;
+}
+
 var chatRoomRequestCount = 0;
 app.get('/chatroom', (req, res) =>{
     let user_id1 = nr_clienti - 1;
@@ -72,7 +84,12 @@ app.get('/chatroom', (req, res) =>{
     chatRoomRequestCount ++;
     if(chatRoomRequestCount == 2) // dupa ce ambii useri fac request la chat room
     {
-        let newRoom = new Room(rooms.length, user_id1, user_id2);
+        let newRoom = {
+            user1: user_id1,
+            user2: user_id2,
+            chat: "",
+            lastMessageID: -1
+        };
         rooms.push(newRoom);
         console.log("Am creat Camera:" + rooms.length + " cu userii:" + user_id1 + " si " + user_id2);
         chatRoomRequestCount = 0;
@@ -85,11 +102,38 @@ app.get('/chatroom', (req, res) =>{
 app.post('/message', (req, res) => {
     let client_id = req.body.id;
     let message = req.body.message;
-    rooms[(client_id-1)/2].appendToChat(message);
-    console.log("Am primit mesajul:" + message);
+    let color;
+    let indexroom = getRoomByUserID(client_id);
+    if(indexroom != -1)
+    {
+        if(rooms[indexroom].user1 == client_id)
+        {
+            color = "blue";
+        }
+        else{
+            color = "red";
+        }
+        acum = new Date();
+        let mesajComplet = "<p style=\"color:" + color + ";\">" + acum.getDate() + "-" + acum.getMonth() + ":" + acum.getHours() + ":" + acum.getMinutes() + ":" + acum.getSeconds() + "   " + message;
+        rooms[indexroom].chat += mesajComplet + "<br/> </p> ";
+        rooms[indexroom].lastMessageID ++;
+    }
     
 });
 
+
+app.post('/messages', (req, res) => {
+    let client_id = req.body.id;
+    let indexroom = getRoomByUserID(client_id);
+    if(indexroom != -1)
+    {
+        console.log("Primesc cerere de mesaj de la user:" + client_id);
+        res.send(rooms[indexroom].chat);
+    }
+    else{
+        res.send("");
+    }
+});
 
 
 app.listen(port, () => console.log(`Serverul rulează la adresa http://localhost:` + port));

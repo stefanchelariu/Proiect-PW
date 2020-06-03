@@ -16,8 +16,12 @@ function postMessage() {
 
 }
 
-function getMessages(newMessages) {
+var intervalID;
+var requestMessagesCount;
+
+function getMessages() {
     let xmlhttp;
+    var lastMessageID;
     if (window.XMLHttpRequest) {
         xmlhttp = new XMLHttpRequest();
         xmlhttp.onreadystatechange =
@@ -25,11 +29,13 @@ function getMessages(newMessages) {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                     let messages = xmlhttp.responseText;
                     document.getElementById("chat-content").innerHTML = messages;
+                    console.log("Fac iar cerere de mesaje!!");
                 }
             }
     }
-    xmlhttp.open("GET", "messages", true);
-    xmlhttp.send();
+    xmlhttp.open("POST", "messages", true);
+    xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xmlhttp.send("id=" + client_id);
 }
 
 function lookForParteners() {
@@ -85,5 +91,8 @@ function askForChatRoom() {
     console.log("Fac cerere la chatroom!");
     xmlhttp.open("GET", "chatroom", false);
     xmlhttp.send({id: client_id});
-    document.getElementById("body").innerHTML = xmlhttp.responseText;
+    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        document.getElementById("body").innerHTML = xmlhttp.responseText;
+        intervalID = setInterval(getMessages, 1000);
+    }
 }
